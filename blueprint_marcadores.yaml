@@ -2,6 +2,7 @@ blueprint:
   name: ⚽️ AWTRIX - Marcadores
   author: Matias
   domain: automation
+  source_url: https://github.com/matbott/ha/blob/b7fcc9eb2a1676ecffc8bb0a13ebd43ac29f84e7/blueprint_marcadores.yaml
   input:
     awtrix:
       name: AWTRIX Device
@@ -14,7 +15,7 @@ blueprint:
           multiple: true
     appname:
       name: Awtrix Application name
-      description: This is the app name listed in the MQTT topic - it should be unique
+      description: This is the app name listed in the MQTT topic - it should be unique. To thank: AWTRIX 3 Hank_the_Tank
       default: app_futbol
       selector:
         text: {}
@@ -37,7 +38,6 @@ blueprint:
           filter:
             - integration: teamtracker
           multiple: false
-  #source_url: https://github.com/blueforcer/flows_blueprints/blob/main/flows/flow_XRKW5R6e5rP4.yaml
 variables:
   device_ids: !input awtrix
   devices:
