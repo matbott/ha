@@ -1,0 +1,179 @@
+blueprint:
+  name: ⚽️ AWTRIX - Marcadores
+  author: Matias
+  domain: automation
+  input:
+    awtrix:
+      name: AWTRIX Device
+      description: Select the Awtrix 3
+      selector:
+        device:
+          integration: mqtt
+          manufacturer: Blueforcer
+          model: AWTRIX 3
+          multiple: true
+    appname:
+      name: Awtrix Application name
+      description: This is the app name listed in the MQTT topic - it should be unique
+      default: app_futbol
+      selector:
+        text: {}
+    message_duration:
+      name: Message Duration ⏱️
+      description: How long should the message remain on the screen (in seconds).
+      selector:
+        number:
+          min: 0.0
+          max: 300.0
+          unit_of_measurement: sec
+          step: 1.0
+          mode: slider
+      default: 15
+    my_sensor:
+      name: Soccer Sensor
+      description: Select your Team Sensor
+      selector:
+        entity:
+          filter:
+            - integration: teamtracker
+          multiple: false
+  #source_url: https://github.com/blueforcer/flows_blueprints/blob/main/flows/flow_XRKW5R6e5rP4.yaml
+variables:
+  device_ids: !input awtrix
+  devices:
+    "{% macro get_device(device_id) %}\n  {{ states((device_entities(device_id)
+    | select('search','device_topic') | list)[0] | default('unknown')) }}\n{% endmacro
+    %} {% set ns = namespace(devices=[]) %} {% for device_id in device_ids %}\n  {%
+    set device=get_device(device_id)|replace(' ','')|replace('\\n','') %}\n  {% set
+    ns.devices = ns.devices + [ device ] %}\n{% endfor %} {{ ns.devices | reject('match','unavailable|unknown')
+    | list }}"
+  appname: !input appname
+  my_sensor: !input my_sensor
+  message_duration: !input message_duration
+  homegame: "{% if state_attr(my_sensor, 'team_homeaway') == 'home' -%} True {%
+    else -%} False {% endif %}"
+  color_home_team_1:
+    "{{ state_attr(my_sensor, 'team_colors')[0]  if homegame else
+    state_attr(my_sensor, 'opponent_colors')[0]  }}"
+  color_home_team_2:
+    "{{ state_attr(my_sensor, 'team_colors')[1]  if homegame else
+    state_attr(my_sensor, 'opponent_colors')[1]  }}"
+  color_away_team_1:
+    "{{ state_attr(my_sensor, 'opponent_colors')[0]  if homegame
+    else state_attr(my_sensor, 'team_colors')[0]  }}"
+  color_away_team_2:
+    "{{ state_attr(my_sensor, 'opponent_colors')[1]  if homegame
+    else state_attr(my_sensor, 'team_colors')[1]  }}"
+  home_team_score:
+    "{{ state_attr(my_sensor, 'team_score') if homegame else state_attr(my_sensor,
+    'opponent_score') }}"
+  away_team_score: "{{ state_attr(my_sensor, 'opponent_score') if homegame else
+    state_attr(my_sensor, 'team_score') }}"
+  payload_switch: "{\n  \"name\" : \"{{ appname }}\"\n}"
+  play_text: >-
+    {% set last_play = state_attr(my_sensor, 'last_play') %}
+      {% set play_text = '' %}
+      {% if last_play is string and ("'" in last_play) %}
+        {% set last_index = last_play.rfind("'") %}
+        {% set minute = last_play[last_index - 2:last_index + 1] %}
+        {% set play_text = last_play[last_index - 2:] | trim %}
+      {% else %}
+        {% set play_text = last_play %}
+      {% endif %}
+
+  scoreBoard:
+    "{\n  \"text\": \"     {{ state_attr(my_sensor, 'team_abbr') }} {{ home_team_score }}-{{ away_team_score }} {{ state_attr(my_sensor, 'opponent_abbr') }} - {{ state_attr(my_sensor, 'clock') }} | {{ play_text }}\",\n  \"draw\":[
+    \n    {\"df\":[0,1,8,2,\"{{ color_home_team_1 }}\"]},\n    {\"df\":[1,3,6,5,\"{{
+    color_home_team_1 }}\"]},\n    {\"dl\":[3,0,4,0,\"{{ color_home_team_1 }}\"]},\n
+    \   {\"dl\":[2,2,2,7,\"{{ color_home_team_2 }}\"]},\n    {\"dl\":[5,2,5,7,\"{{
+    color_home_team_2 }}\"]},\n    {\"df\":[24,1,8,2,\"{{ color_away_team_1 }}\"]},\n
+    \   {\"df\":[25,3,6,5,\"{{ color_away_team_1 }}\"]},\n    {\"dl\":[27,0,28,0,\"{{
+    color_away_team_1 }}\"]},\n    {\"dl\":[26,2,26,7,\"{{ color_away_team_2 }}\"]},\n
+    \   {\"dl\":[29,2,29,7,\"{{ color_away_team_2 }}\"]}    \n  ], \n  \"duration\":
+    {{ message_duration }},\n  \"background\": \"#006c28\"\n}"
+trigger:
+  - platform: state
+    entity_id: !input my_sensor
+    to: "IN"
+    id: gameStart
+
+  - platform: state
+    entity_id: !input my_sensor
+    to:
+      - "PRE"
+      - "POST"
+      - "NOT_FOUND"
+    id: noGame
+
+  - platform: state
+    entity_id: !input my_sensor
+    attribute: team_score
+    id: scoreChangeHome
+
+  - platform: state
+    entity_id: !input my_sensor
+    attribute: opponent_score
+    id: scoreChangeOpponent
+
+  - platform: state
+    entity_id: !input my_sensor
+    attribute: quarter
+    to: "2"
+    id: halftime
+
+  - platform: state
+    entity_id: !input my_sensor
+    attribute: last_play
+    from: null
+    id: lastPlayChange
+
+  - platform: state
+    entity_id: !input my_sensor
+    attribute: clock
+    from: null
+    to: "MT"
+    id: clock
+
+condition: []
+action:
+  - repeat:
+      for_each: "{{ devices }}"
+      sequence:
+        - choose:
+            - conditions:
+                - condition: trigger
+                  id:
+                    - gameStart
+                    - scoreChangeHome
+                    - scoreChangeOpponent
+                    - halftime
+                    - lastPlayChange
+                    - clock
+                - condition: state
+                  entity_id: !input my_sensor
+                  state: IN
+              sequence:
+                - service: mqtt.publish
+                  data:
+                    qos: 0
+                    retain: false
+                    topic: "{{ repeat.item }}/custom/{{ appname }}"
+                    payload: "{{ scoreBoard }}"
+                - service: mqtt.publish
+                  data:
+                    qos: 0
+                    retain: false
+                    topic: "{{ repeat.item }}/switch"
+                    payload: "{{ payload_switch }}"
+            - conditions:
+                - condition: trigger
+                  id:
+                    - noGame
+              sequence:
+                - service: mqtt.publish
+                  data:
+                    qos: 0
+                    retain: false
+                    topic: "{{ repeat.item }}/custom/{{ appname }}"
+                    payload: "{}"
+mode: restart
