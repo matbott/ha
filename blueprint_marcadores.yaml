@@ -15,7 +15,7 @@ blueprint:
           multiple: true
     appname:
       name: Awtrix Application name
-      description: This is the app name listed in the MQTT topic - it should be unique. To thank Hank_the_Tank
+      description: This is the app name listed in the MQTT topic - it should be unique.
       default: app_futbol
       selector:
         text: {}
