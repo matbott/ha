@@ -1,5 +1,5 @@
 blueprint:
-  name: ⚽️ AWTRIX - Marcadores
+  name: ⚽️ AWTRIX - Marcadores 1.0v
   author: Matias
   domain: automation
   source_url: https://github.com/matbott/ha/blob/b7fcc9eb2a1676ecffc8bb0a13ebd43ac29f84e7/blueprint_marcadores.yaml
