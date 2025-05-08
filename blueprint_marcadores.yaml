@@ -1,5 +1,5 @@
 blueprint:
-  name: ⚽️ AWTRIX - Marcadores 1.0v
+  name: ⚽️ AWTRIX - Marcadores 1.1v
   author: Matias
   domain: automation
   source_url: https://github.com/matbott/ha/blob/main/blueprint_marcadores.yaml
@@ -70,16 +70,27 @@ variables:
   away_team_score: "{{ state_attr(my_sensor, 'opponent_score') if homegame else
     state_attr(my_sensor, 'team_score') }}"
   payload_switch: "{\n  \"name\" : \"{{ appname }}\"\n}"
-  play_text: >-
-    {% set last_play = state_attr(my_sensor, 'last_play') %}
-      {% set play_text = '' %}
-      {% if last_play is string and ("'" in last_play) %}
+  play_text: |-
+    {% set last_play = state_attr(my_sensor, 'last_play') | default('', true) %}
+    {% set play_text = '' %}
+    {% if last_play is string and last_play | length > 0 %}
+      {% if "'" in last_play or "’" in last_play %}
         {% set last_index = last_play.rfind("'") %}
-        {% set minute = last_play[last_index - 2:last_index + 1] %}
-        {% set play_text = last_play[last_index - 2:] | trim %}
+        {% if last_index == -1 %}
+        {% set last_index = last_play.rfind("’") %}
+        {% endif %}
+        {% if last_index >= 2 %}
+          {% set play_text = last_play[last_index - 2:] | trim %}
+        {% else %}
+          {% set play_text = last_play %}
+        {% endif %}
       {% else %}
         {% set play_text = last_play %}
       {% endif %}
+    {% else %}
+      {% set play_text = 'No play data' %}
+    {% endif %}
+    {{ play_text | default('No play data') }}
 
   scoreBoard:
     "{\n  \"text\": \"     {{ state_attr(my_sensor, 'team_abbr') }} {{ home_team_score }}-{{ away_team_score }} {{ state_attr(my_sensor, 'opponent_abbr') }} - {{ state_attr(my_sensor, 'clock') }} | {{ play_text }}\",\n  \"draw\":[
