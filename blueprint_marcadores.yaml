@@ -2,7 +2,7 @@ blueprint:
   name: ⚽️ AWTRIX - Marcadores 1.2v
   author: Matias
   domain: automation
-  source_url: https://github.com/matbott/ha/blob/main/blueprint_marcadores.yaml
+  source_url: https://raw.githubusercontent.com/matbott/ha/main/blueprint_marcadores.yaml
   input:
     awtrix:
       name: AWTRIX Device
