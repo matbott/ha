@@ -69,14 +69,14 @@ variables:
   
   payload_switch: "{\n  \"name\" : \"{{ appname }}\"\n}"
   
-  play_text: |-
+play_text: |-
     {% set last_play = state_attr(my_sensor, 'last_play') | default('', true) %}
     {% set play_text = '' %}
     {% if last_play is string and last_play | length > 0 %}
-      {% if "'" in last_play or "'" in last_play %}
+      {% if "'" in last_play or "’" in last_play %}
         {% set last_index = last_play.rfind("'") %}
         {% if last_index == -1 %}
-        {% set last_index = last_play.rfind("'") %}
+        {% set last_index = last_play.rfind("’") %}
         {% endif %}
         {% if last_index >= 2 %}
           {% set play_text = last_play[last_index - 2:] | trim %}
@@ -87,7 +87,7 @@ variables:
         {% set play_text = last_play %}
       {% endif %}
     {% else %}
-      {% set play_text = 'No play data' %}
+      {% set play_text = 'No play data' %}More actions
     {% endif %}
     {{ play_text | default('No play data') }}
 
