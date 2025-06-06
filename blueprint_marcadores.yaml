@@ -1,5 +1,5 @@
 blueprint:
-  name: ⚽️ AWTRIX - Marcadores 1.2v
+  name: ⚽️ AWTRIX - Marcadores 1.3v
   author: Matias
   domain: automation
   source_url: https://raw.githubusercontent.com/matbott/ha/main/blueprint_marcadores.yaml
@@ -67,16 +67,19 @@ variables:
   home_team_score: "{{ state_attr(my_sensor, 'team_score') if state_attr(my_sensor, 'team_homeaway') == 'home' else state_attr(my_sensor, 'opponent_score') }}"
   away_team_score: "{{ state_attr(my_sensor, 'opponent_score') if state_attr(my_sensor, 'team_homeaway') == 'home' else state_attr(my_sensor, 'team_score') }}"
   
-  payload_switch: "{\n  \"name\" : \"{{ appname }}\"\n}"
+  payload_switch: |
+    {
+      "name" : "{{ appname }}"
+    }
   
-play_text: |-
+  play_text: |-
     {% set last_play = state_attr(my_sensor, 'last_play') | default('', true) %}
     {% set play_text = '' %}
     {% if last_play is string and last_play | length > 0 %}
-      {% if "'" in last_play or "’" in last_play %}
+      {% if "'" in last_play or "'" in last_play %}
         {% set last_index = last_play.rfind("'") %}
         {% if last_index == -1 %}
-        {% set last_index = last_play.rfind("’") %}
+        {% set last_index = last_play.rfind("'") %}
         {% endif %}
         {% if last_index >= 2 %}
           {% set play_text = last_play[last_index - 2:] | trim %}
@@ -87,20 +90,29 @@ play_text: |-
         {% set play_text = last_play %}
       {% endif %}
     {% else %}
-      {% set play_text = 'No play data' %}More actions
+      {% set play_text = 'No play data' %}
     {% endif %}
     {{ play_text | default('No play data') }}
 
-scoreBoard:
-    "{\n  \"text\": \"     {{ home_team_abbr }} {{ home_team_score }}-{{ away_team_score }} {{ away_team_abbr }} - {{ state_attr(my_sensor, 'clock') }} | {{ play_text }}\",\n  \"draw\":[ 
-    \n    {\"df\":[0,1,8,2,\"{{ home_team_color_1 }}\"]},\n    {\"df\":[1,3,6,5,\"{{
-    home_team_color_1 }}\"]},\n    {\"dl\":[3,0,4,0,\"{{ home_team_color_1 }}\"]},\n
-    \   {\"dl\":[2,2,2,7,\"{{ home_team_color_2 }}\"]},\n    {\"dl\":[5,2,5,7,\"{{
-    home_team_color_2 }}\"]},\n    {\"df\":[24,1,8,2,\"{{ away_team_color_1 }}\"]},\n
-    \   {\"df\":[25,3,6,5,\"{{ away_team_color_1 }}\"]},\n    {\"dl\":[27,0,28,0,\"{{
-    away_team_color_1 }}\"]},\n    {\"dl\":[26,2,26,7,\"{{ away_team_color_2 }}\"]},\n
-    \   {\"dl\":[29,2,29,7,\"{{ away_team_color_2 }}\"]}    
-    \n  ], \n  \"duration\": {{ message_duration }},\n  \"background\": \"#006c28\"\n}"
+  scoreBoard: >
+    {
+      "text": "     {{ home_team_abbr }} {{ home_team_score }}-{{ away_team_score }} {{ away_team_abbr }} - {{ state_attr(my_sensor, 'clock') }} | {{ play_text }}",
+      "draw": [
+        {"df":[0,1,8,2,"{{ home_team_color_1 }}"]},
+        {"df":[1,3,6,5,"{{ home_team_color_1 }}"]},
+        {"dl":[3,0,4,0,"{{ home_team_color_1 }}"]},
+        {"dl":[2,2,2,7,"{{ home_team_color_2 }}"]},
+        {"dl":[5,2,5,7,"{{ home_team_color_2 }}"]},
+        {"df":[24,1,8,2,"{{ away_team_color_1 }}"]},
+        {"df":[25,3,6,5,"{{ away_team_color_1 }}"]},
+        {"dl":[27,0,28,0,"{{ away_team_color_1 }}"]},
+        {"dl":[26,2,26,7,"{{ away_team_color_2 }}"]},
+        {"dl":[29,2,29,7,"{{ away_team_color_2 }}"]}
+      ],
+      "duration": {{ message_duration }},
+      "background": "#006c28"
+    }
+
 trigger:
   - platform: state
     entity_id: !input my_sensor
