@@ -91,7 +91,7 @@ play_text: |-
     {% endif %}
     {{ play_text | default('No play data') }}
 
-  scoreBoard:
+scoreBoard:
     "{\n  \"text\": \"     {{ home_team_abbr }} {{ home_team_score }}-{{ away_team_score }} {{ away_team_abbr }} - {{ state_attr(my_sensor, 'clock') }} | {{ play_text }}\",\n  \"draw\":[ 
     \n    {\"df\":[0,1,8,2,\"{{ home_team_color_1 }}\"]},\n    {\"df\":[1,3,6,5,\"{{
     home_team_color_1 }}\"]},\n    {\"dl\":[3,0,4,0,\"{{ home_team_color_1 }}\"]},\n
