@@ -1,0 +1,63 @@
+blueprint:
+  name: Notificación de Alertas Meteorológicas Inumet
+  description: >-
+    Envía una notificación a un dispositivo móvil cuando se activa una alerta de la integración Inumet Uruguay.
+    La notificación incluye el mapa de la alerta, un título y un mensaje personalizables con los datos de la alerta.
+  domain: automation
+  input:
+    alert_sensor:
+      name: Sensor de Alerta
+      description: Elige el sensor binario de alertas de Inumet que disparará la notificación.
+      selector:
+        entity:
+          domain: binary_sensor
+          device_class: safety
+    image_entity:
+      name: Entidad de Imagen del Mapa
+      description: Elige la entidad de imagen que contiene el mapa de alertas de Inumet.
+      selector:
+        entity:
+          domain: image
+    notification_service:
+      name: Servicio de Notificación
+      description: "Elige el servicio de notificación de tu móvil (ej: notify.mobile_app_mi_telefono)."
+      # --- CORRECCIÓN: Usar el selector de 'entity' con un filtro de dominio ---
+      selector:
+        entity:
+          domain: notify
+    notification_title:
+      name: Título de la Notificación (Opcional)
+      description: Personaliza el título de la notificación.
+      default: "⚠️ ¡Alerta Meteorológica de Inumet!"
+    notification_message:
+      name: Mensaje de la Notificación (Opcional)
+      description: "Personaliza el mensaje. Si lo dejas en blanco, se usará un mensaje automático con los detalles de la alerta."
+      default: ""
+
+variables:
+  alert_sensor: !input alert_sensor
+  image_entity: !input image_entity
+  notification_title: !input notification_title
+  notification_message: !input notification_message
+
+trigger:
+  - platform: state
+    entity_id: !input alert_sensor
+    from: 'off'
+    to: 'on'
+
+action:
+  - service: !input notification_service
+    data:
+      title: "{{ notification_title }}"
+      message: >-
+        {% if notification_message != "" %}
+          {{ notification_message }}
+        {% else %}
+          {{ state_attr(alert_sensor, 'alertas')[0].titulo }}
+          Severidad: {{ state_attr(alert_sensor, 'alertas')[0].severidad }}
+        {% endif %}
+      data:
+        image: "{{ state_attr(image_entity, 'entity_picture') }}"
+        # Opcional: Define una acción al hacer clic en la notificación
+        # clickAction: "/lovelace/tiempo"
